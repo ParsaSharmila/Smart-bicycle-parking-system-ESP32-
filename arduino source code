@@ -1,0 +1,185 @@
+#include <ArduinoJson.h>
+#include <WiFi.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+//#include <Bridge.h>
+#include <HttpClient.h>
+
+
+//******************for DateTime************************************
+const char* ssid     = "*******";
+const char* password = "******";
+
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
+// PATCH https://hagelkil.ddns.net:5001/ParkingSpots/OccupyParkingSpot/1
+// PATCH https://hagelkil.ddns.net:5001/ParkingSpots/FreeParkingSpot/1
+
+// Variables to save date and time
+String formattedDate;
+String dayStamp;
+String timeStamp;
+//*****************for DateTime************************************
+
+// variables for sensor1
+int trigPin1 = 15;    // Trigger
+int echoPin1 = 23;    // Echo
+long duration1;
+int distance1; 
+
+// variables for sensor2
+int trigPin2 = 33;    // Trigger
+int echoPin2 = 22;    // Echo
+long duration2;
+int distance2;
+
+// variables for sensor3
+int trigPin3 = 27;    // Trigger
+int echoPin3 = 14;    // Echo
+long duration3;
+int distance3;
+
+// variables for sensor4
+int trigPin4 = 12;    // Trigger
+int echoPin4 = 32;    // Echo
+long duration4;
+int distance4;
+ 
+void setup() {
+
+ 
+  pinMode(trigPin1, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin1, INPUT); // Sets the echoPin as an Input
+  
+  pinMode(trigPin2, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin2, INPUT); // Sets the echoPin as an Input
+  
+  pinMode(trigPin3, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin3, INPUT); // Sets the echoPin as an Input
+  
+  pinMode(trigPin4, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin4, INPUT); // Sets the echoPin as an Input
+  
+  Serial.begin(9600); // Starts the serial communication
+
+  //********************for DateTime*****************************************
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  // Print local IP address and start web server
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  // Initialize a NTPClient to get time
+  timeClient.begin();
+  // Set offset time in seconds to adjust for your timezone, for example:
+  // GMT +1 = 3600
+  // GMT +8 = 28800
+  // GMT -1 = -3600
+  // GMT 0 = 0
+  timeClient.setTimeOffset(7200);
+  //********************for DateTime*****************************************
+  
+}
+ 
+void loop() {
+
+  
+  
+  DynamicJsonBuffer jBuffer;
+  JsonObject& root = jBuffer.createObject();
+
+  //****************for DateTime*********************************************
+   while(!timeClient.update()) {
+    timeClient.forceUpdate();
+  }
+  // The formattedDate comes with the following format:
+  // 2018-05-28T16:00:13Z
+  // We need to extract date and time
+  formattedDate = timeClient.getFormattedDate();
+  //Serial.println(formattedDate);
+  //*****************for DateTime******************************************
+
+  // Clears the trigPin of sensor1
+  digitalWrite(trigPin1, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin1, LOW);
+  duration1 = pulseIn(echoPin1, HIGH);
+  distance1 = (duration1 / 2) *0.034;
+  root["id"] = "1";
+  if (distance1 < 10)
+  root["isFree"] = "false";
+  else {
+  root["isFree"] = "true";
+  }
+  root["lastUpdated"] = formattedDate;
+  root.prettyPrintTo(Serial);
+  Serial.println();
+
+  // Clears the trigPin of sensor2
+  digitalWrite(trigPin2, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin2, LOW);
+  duration2 = pulseIn(echoPin2, HIGH);
+  distance2 = (duration2 / 2) *0.034;
+  root["id"] = "2";
+  if (distance2 < 10)
+  root["isFree"] = "false";
+  else {
+  root["isFree"] = "true";
+  }
+  root["lastUpdated"] = formattedDate;
+  root.prettyPrintTo(Serial);
+  Serial.println();
+
+  // Clears the trigPin of sensor3
+  digitalWrite(trigPin3, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin3, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin3, LOW);
+  duration3 = pulseIn(echoPin3, HIGH);
+  distance3 = (duration3 / 2) *0.034;
+  root["id"] = "3";
+  if (distance3 < 10)
+  root["isFree"] = "false";
+  else {
+  root["isFree"] = "true";
+  }
+  root["lastUpdated"] = formattedDate;
+  root.prettyPrintTo(Serial);
+  Serial.println();
+
+  // Clears the trigPin of sensor4
+  digitalWrite(trigPin4, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin4, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin4, LOW);
+  duration4 = pulseIn(echoPin4, HIGH);
+  distance4 = (duration4 / 2) *0.034;
+  root["id"] = "4";
+  if (distance4 < 10)
+  root["isFree"] = "false";
+  else {
+  root["isFree"] = "true";
+  }
+  root["lastUpdated"] = formattedDate;
+  root.prettyPrintTo(Serial);
+  Serial.println();
+
+  
+  delay(10000); //10 seconds delay
+}
